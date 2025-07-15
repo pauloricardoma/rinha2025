@@ -5,4 +5,5 @@ CREATE UNLOGGED TABLE payments (
     createdAt TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE INDEX idx_payments_type ON payments (type);
 CREATE INDEX idx_payments_created_at ON payments (createdAt);

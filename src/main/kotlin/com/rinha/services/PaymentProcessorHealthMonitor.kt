@@ -10,11 +10,11 @@ import kotlinx.coroutines.launch
 object PaymentProcessorHealthMonitor {
     private var defaultServiceHealth = PaymentProcessorHealthResponse(
         failing = false,
-        minResponseTime = 0
+        minResponseTime = null
     )
     private var fallbackServiceHealth = PaymentProcessorHealthResponse(
         failing = false,
-        minResponseTime = 0
+        minResponseTime = null
     )
 
     fun start(app: Application, paymentService: PaymentProcessorService) {
@@ -23,8 +23,14 @@ object PaymentProcessorHealthMonitor {
                 val responseDefault = paymentService.serviceHealth(PaymentType.DEFAULT)
                 val responseFallback = paymentService.serviceHealth(PaymentType.FALLBACK)
 
-                defaultServiceHealth = responseDefault ?: defaultServiceHealth
-                fallbackServiceHealth = responseFallback ?: fallbackServiceHealth
+                if (responseDefault != null) {
+                    defaultServiceHealth.failing = responseDefault.failing
+                    defaultServiceHealth.minResponseTime = responseDefault.minResponseTime
+                }
+                if (responseFallback != null) {
+                    fallbackServiceHealth.failing = responseFallback.failing
+                    fallbackServiceHealth.minResponseTime = responseFallback.minResponseTime
+                }
 
                 delay(5000)
             }
@@ -33,7 +39,7 @@ object PaymentProcessorHealthMonitor {
 
     fun get(): PaymentProcessorHealth {
         return PaymentProcessorHealth(
-            defaultServiceHealth,
+            default = defaultServiceHealth,
             fallback = fallbackServiceHealth
         )
     }

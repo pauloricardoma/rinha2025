@@ -41,11 +41,23 @@ fun Route.paymentsRouting() {
 
                 val summary = paymentsRepository.summary(fromDate, toDate)
 
-                call.respond(HttpStatusCode.OK,summary)
+                if (summary != null) {
+                    call.respond(HttpStatusCode.OK,summary)
+                } else {
+                    call.respond(HttpStatusCode.UnprocessableEntity)
+                    return@get
+                }
             } catch (e: Exception) {
+                print(e.message)
                 call.respond(HttpStatusCode.UnprocessableEntity)
                 return@get
             }
+        }
+    }
+
+    route("/purge-payments") {
+        post {
+            call.respond(HttpStatusCode.OK)
         }
     }
 }

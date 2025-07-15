@@ -1,7 +1,11 @@
 package com.rinha.models
 
-data class PaymentProcessorCreateRequest(
+import kotlin.time.ExperimentalTime
+import kotlin.time.Instant
+
+data class PaymentProcessorCreateRequest @OptIn(ExperimentalTime::class) constructor(
     val correlationId: String,
     val amount: Double,
-    val type: PaymentType
+    val type: PaymentType,
+    val requestedAt: Instant
 )

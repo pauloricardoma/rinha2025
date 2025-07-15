@@ -31,7 +31,7 @@ class PaymentProcessorService(environment: ApplicationEnvironment): KoinComponen
             val body = PaymentProcessorCreate(
                 correlationId = paymentProcessorCreateRequest.correlationId,
                 amount = paymentProcessorCreateRequest.amount,
-                requestedAt = Clock.System.now()
+                requestedAt = paymentProcessorCreateRequest.requestedAt
             )
 
             var url: String = if (paymentProcessorCreateRequest.type == PaymentType.DEFAULT) {
@@ -45,12 +45,14 @@ class PaymentProcessorService(environment: ApplicationEnvironment): KoinComponen
                 contentType(ContentType.Application.Json)
                 setBody(body)
             }
+            print("RES: ${response.status}")
 
             when (response.status) {
                 HttpStatusCode.OK -> response.body<PaymentProcessorCreateResponse>().message
                 else -> null
             }
         } catch (e: Exception) {
+            print("RES ERROR: ${e.message}")
             null
         }
     }

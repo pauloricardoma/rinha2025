@@ -18,13 +18,12 @@ object PaymentWorker {
 
                 if (PaymentQueue.queue.isNotEmpty()) {
                     val paymentRequest = PaymentQueue.queue.poll()
-                    val processorDiffTime = healthProcessors.default.minResponseTime / healthProcessors.fallback.minResponseTime
-                    val defaultIsBetter = processorDiffTime <= 3
+                    val processorDiffTime = ((healthProcessors.default.minResponseTime ?: 0) + 1) / ((healthProcessors.fallback.minResponseTime ?: 0) + 1)
+                    val defaultIsBetter = processorDiffTime <= 20
 
-                    val type = if (healthProcessors.default.failing || !defaultIsBetter) {
-                        PaymentType.FALLBACK
-                    } else {
-                        PaymentType.DEFAULT
+                    val type = when {
+                        healthProcessors.default.failing || !defaultIsBetter -> PaymentType.FALLBACK
+                        else -> PaymentType.DEFAULT
                     }
 
                     val payment = Payment(
@@ -35,7 +34,21 @@ object PaymentWorker {
                     val paymentResponse = paymentsRepository.create(payment)
 
                     if (!paymentResponse) {
-                        PaymentQueue.queue.add(paymentRequest)
+                        val newType = when {
+                            type == PaymentType.FALLBACK -> PaymentType.DEFAULT
+                            else -> PaymentType.FALLBACK
+                        }
+
+                        val newPayment = Payment(
+                            correlationId = paymentRequest.correlationId,
+                            amount = paymentRequest.amount,
+                            type = newType
+                        )
+                        val newPaymentResponse = paymentsRepository.create(newPayment)
+
+                        if (!newPaymentResponse) {
+                            PaymentQueue.queue.add(paymentRequest)
+                        }
                     }
                 } else {
                     delay(100)

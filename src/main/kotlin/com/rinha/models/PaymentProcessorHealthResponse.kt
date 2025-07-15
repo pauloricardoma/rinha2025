@@ -4,6 +4,6 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class PaymentProcessorHealthResponse(
-    val failing: Boolean,
-    val minResponseTime: Int
+    var failing: Boolean,
+    var minResponseTime: Int?
 )
